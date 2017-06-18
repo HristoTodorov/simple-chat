@@ -10,10 +10,7 @@ import com.simplechat.server.core.response.ServerResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.text.MessageFormat;
@@ -32,8 +29,9 @@ public class ClientSession implements Runnable {
 
     @Override
     public void run() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream())) {
+        try (Reader reader = new InputStreamReader(clientSocket.getInputStream());
+                BufferedReader in = new BufferedReader(reader);
+                PrintWriter out = new PrintWriter(clientSocket.getOutputStream())) {
             final SocketAddress socketAddress = clientSocket.getRemoteSocketAddress();
             System.out.println(MessageFormat.format("Unknown user try to login from {0}. ",
                     socketAddress));
@@ -67,8 +65,8 @@ public class ClientSession implements Runnable {
             ex.printStackTrace();
         } finally {
             try {
-                ClientRegistry.unregisterClient(clientSocket.getRemoteSocketAddress());
                 clientSocket.close();
+                ClientRegistry.unregisterClient(clientSocket.getRemoteSocketAddress());
                 System.out.println(String.format("%s is stopped!",
                         clientSocket.getRemoteSocketAddress().toString()));
             } catch (IOException ex) {
@@ -85,8 +83,8 @@ public class ClientSession implements Runnable {
                 try {
                     return new CommandExecutor(userName, message).call();
                 } catch (Exception e) {
+                    client.setRegistered(false);
                     if (e instanceof ClientLogoutException) {
-                        client.setRegistered(false);
                         return new ServerResponse(ServerResponse.ResponseCode.OK,
                                 "Logged out");
                     } else {

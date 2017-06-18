@@ -24,11 +24,6 @@ public class ServerInitializer {
         Server.init(port, isSilentModeOn);
     }
 
-    private static void printHelp(Options options) {
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Simple chat Server - Help menu", options);
-    }
-
     private static class ArgumentParser {
         private final String[] args;
         private int port;
@@ -36,6 +31,11 @@ public class ServerInitializer {
 
         public ArgumentParser(String... args) {
             this.args = args;
+        }
+
+        private void printHelp(Options options) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("Simple chat Server - Help menu", options);
         }
 
         public int getPort() {

@@ -22,8 +22,8 @@ class Server {
             SILENT_MODE_ON = silentModeOn;
             ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println(String.format("Server accept requests on %d port.", PORT));
-            Executor exec = Executors.newFixedThreadPool(
-                    Runtime.getRuntime().availableProcessors());
+            //Runtime.getRuntime().availableProcessors()
+            Executor exec = Executors.newCachedThreadPool();
             while (SERVER_UP) {
                 CompletableFuture.runAsync(new ClientSession(serverSocket.accept()), exec);
             }
