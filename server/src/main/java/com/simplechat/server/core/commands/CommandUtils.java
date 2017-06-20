@@ -16,6 +16,12 @@ public final class CommandUtils {
 
     private static final String BROADCAST_MESSAGE_PATTERN = "({0})( )(.*)";
 
+    private static final Pattern UNICAST_PATTERN = Pattern.compile(
+            MessageFormat.format(UNICAST_MESSAGE_PATTERN, Commands.SEND_TO));
+
+    private static final Pattern BROADCAST_PATTERN = Pattern.compile(
+            MessageFormat.format(BROADCAST_MESSAGE_PATTERN, Commands.SEND_ALL));
+
     public static String processLoginCommand(@NotNull final String command) {
         if (StringUtils.isBlank(command)) {
             return null;
@@ -35,8 +41,7 @@ public final class CommandUtils {
     }
 
     public static String getUnicastMessage(String command) {
-        Pattern p = Pattern.compile(MessageFormat.format(UNICAST_MESSAGE_PATTERN, Commands.SEND_TO));
-        Matcher matcher = p.matcher(command);
+        Matcher matcher = UNICAST_PATTERN.matcher(command);
         if (matcher.matches()) {
             return matcher.group(4);
         }
@@ -44,8 +49,7 @@ public final class CommandUtils {
     }
 
     public static String getBroadcastMessage(String command) {
-        Pattern p = Pattern.compile(MessageFormat.format(BROADCAST_MESSAGE_PATTERN, Commands.SEND_ALL));
-        Matcher matcher = p.matcher(command);
+        Matcher matcher = BROADCAST_PATTERN.matcher(command);
         if (matcher.matches()) {
             return matcher.group(3);
         }
