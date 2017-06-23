@@ -36,29 +36,9 @@ public class ClientSession implements Runnable {
             System.out.println(MessageFormat.format("Unknown user try to login from {0}. ",
                     socketAddress));
             final String userName = CommandUtils.processLoginCommand(in.readLine());
-            if (StringUtils.isBlank(userName)) {
-                out.println(new ServerResponse(IServerResponse.ResponseCode.ERROR,
-                        "Invalid user name. Please specify a correct username!").toString());
-                out.flush();
-                return;
-            }
-            final Client client = new ClientBean(userName, socketAddress);
-            ClientRegistry.registerClient(client);
-            if (client.isRegistered()) {
-                System.out.println(String.format("Granting access to user %s from %s.",
-                        userName, socketAddress.toString()));
-                client.setRegistered(true);
-                NotifierRegistry.registerNotifier(userName, new ClientMessageNotifier(out));
-                out.println(new ServerResponse(IServerResponse.ResponseCode.OK,
-                        String.format("%s successfully registered!", userName)).toString());
-                out.flush();
-            } else {
-                out.println(new ServerResponse(IServerResponse.ResponseCode.ERROR,
-                        String.format("%s already taken!", userName)).toString());
-                out.flush();
-                return;
-            }
-            processClientSession(in, out, userName, client);
+            CompletableFuture
+                    .supplyAsync(() -> logClient(userName, out, socketAddress))
+                    .thenAccept((client) -> processClientSession(in, out, userName, client));
         } catch (Throwable ex) {
             System.err.println(String.format("Connection from %s reset!",
                     clientSocket.getRemoteSocketAddress().toString()));
@@ -75,27 +55,61 @@ public class ClientSession implements Runnable {
         }
     }
 
-    private void processClientSession(@NotNull BufferedReader in, @NotNull PrintWriter out, String userName, @NotNull Client client) throws IOException {
-        // Client
+    private Client logClient(final String userName, final PrintWriter out, final SocketAddress socketAddress) {
+        if (StringUtils.isBlank(userName)) {
+            out.println(new ServerResponse(IServerResponse.ResponseCode.ERROR,
+                    "Invalid user name. Please specify a correct username!").toString());
+            out.flush();
+            return null;
+        }
+        final Client client = new ClientBean(userName, socketAddress);
+        ClientRegistry.registerClient(client);
+        if (client.isRegistered()) {
+            System.out.println(String.format("Granting access to user %s from %s.",
+                    userName, socketAddress.toString()));
+            client.setRegistered(true);
+            NotifierRegistry.registerNotifier(userName, new ClientMessageNotifier(out));
+            out.println(new ServerResponse(IServerResponse.ResponseCode.OK,
+                    String.format("%s successfully registered!", userName)).toString());
+            out.flush();
+            return client;
+        } else {
+            out.println(new ServerResponse(IServerResponse.ResponseCode.ERROR,
+                    String.format("%s already taken!", userName)).toString());
+            out.flush();
+            return null;
+        }
+    }
+
+    private void processClientSession(@NotNull BufferedReader in, @NotNull PrintWriter out, String userName,
+                                      @NotNull Client client) {
+        // Client session
         while (client.isRegistered()) {
-            final String message = in.readLine();
-            CompletableFuture.supplyAsync(() -> {
-                try {
-                    return new CommandExecutor(userName, message).call();
-                } catch (Exception e) {
-                    client.setRegistered(false);
-                    if (e instanceof ClientLogoutException) {
-                        return new ServerResponse(ServerResponse.ResponseCode.OK,
-                                "Logged out");
-                    } else {
-                        e.printStackTrace();
-                        return new NullServerResponse();
+            try {
+                final String message = in.readLine();
+                CompletableFuture<IServerResponse> serverResponse = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return new CommandExecutor(userName, message).call();
+                    } catch (Exception e) {
+                        client.setRegistered(false);
+                        if (e instanceof ClientLogoutException) {
+                            return new ServerResponse(ServerResponse.ResponseCode.OK,
+                                    "Logged out");
+                        } else {
+                            e.printStackTrace();
+                            return new NullServerResponse();
+                        }
                     }
-                }
-            }).thenAcceptAsync(serverResponse -> {
-                out.println(serverResponse.toString());
-                out.flush();
-            });
+                });
+                serverResponse.thenAccept(response -> {
+                    out.println(response.toString());
+                    out.flush();
+                });
+            } catch (IOException ioe) {
+                System.err.println(String.format("Connection from %s reset!",
+                        clientSocket.getRemoteSocketAddress().toString()));
+                ioe.printStackTrace();
+            }
         }
     }
 }

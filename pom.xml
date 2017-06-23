@@ -8,12 +8,18 @@
     <artifactId>simple-chat</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <properties>
+        <apache.commons.cli.version>1.4</apache.commons.cli.version>
+        <apache.commons.lang3.version>3.5</apache.commons.lang3.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <description>
         This is a simple-chat application for FMI course Distributed software architectures.
         http://rmi.yaht.net/projects/zad3-chat.pdf
     </description>
 
     <modules>
+        <module>shared</module>
         <module>server</module>
         <module>client-perf</module>
     </modules>

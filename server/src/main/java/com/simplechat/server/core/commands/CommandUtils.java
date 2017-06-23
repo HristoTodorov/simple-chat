@@ -1,5 +1,6 @@
 package com.simplechat.server.core.commands;
 
+import com.simplechat.shared.messages.Commands;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 

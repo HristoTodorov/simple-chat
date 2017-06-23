@@ -9,6 +9,7 @@ import com.simplechat.server.core.message.NotifierRegistry;
 import com.simplechat.server.core.response.IServerResponse;
 import com.simplechat.server.core.response.NullServerResponse;
 import com.simplechat.server.core.response.ServerResponse;
+import com.simplechat.shared.messages.Commands;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 

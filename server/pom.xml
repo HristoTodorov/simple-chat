@@ -10,15 +10,15 @@
     </parent>
     <groupId>simple-chat</groupId>
     <artifactId>server</artifactId>
-    <version>${parent.version}</version>
+    <version>${project.parent.version}</version>
+    <packaging>jar</packaging>
     <description>
         This is a simple-chat server application for FMI course Distributed software architectures.
         http://rmi.yaht.net/projects/zad3-chat.pdf
     </description>
     <properties>
-        <apache.commons.lang3.version>3.5</apache.commons.lang3.version>
         <google.guava.version>22.0</google.guava.version>
-        <apache.commons.cli.version>1.4</apache.commons.cli.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <developers>
         <developer>
@@ -63,6 +63,11 @@
         </plugins>
     </build>
     <dependencies>
+        <dependency>
+            <groupId>simple-chat</groupId>
+            <artifactId>shared</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
