@@ -1,10 +1,13 @@
 import argparse, sys as system
-import os
+import time
+import uuid
+from subprocess import Popen, call
+
 
 parser = argparse.ArgumentParser(description='Client perf program')
 parser.add_argument('--clients', type=int, help='The number of clients')
-parser.add_argument("--serverjar", type=int, help="Location of server jar")
-parser.add_argument("--perfjar", type=int, help="Location of performance jar")
+parser.add_argument("--serverjar", type=str, help="Location of server jar")
+parser.add_argument("--perfjar", type=str, help="Location of performance jar")
 parser.add_argument("--port", type=int, help="Server port")
 parser.add_argument("--umsg", type=int, help="Total number of unicast messages to send")
 parser.add_argument("--bmsg", type=int, help="Total number of broadcast messages to send")
@@ -13,7 +16,8 @@ args = parser.parse_args()
 
 def validate_arg(argument):
     if argument == None or argument == "":
-        print argument + " can not be empty"
+        print("Empty argument. Try again")
+        # TODO show the help menu
         system.exit(0)
 
 # the total number of clients
@@ -38,6 +42,20 @@ args = [num_of_clients, server_jar_name, perf_jar_name, server_port,
 for arg in args:
     validate_arg(arg)
 
-print "Trying to start the server on port: " + server_port
-exit_code = os.system("java -jar " + server_jar_name + " -p " + server_port)
-print exit_code
+print("Trying to start the server on port: " + str(server_port))
+server_args = [server_jar_name, "-p", str(server_port)]
+JAR_COMMAND = ['java', '-jar']
+server = Popen(JAR_COMMAND + server_args)
+time.sleep(5) # wait 5 seconds in order server to start
+if server.poll():
+    print("Server does not start in the timely manner.")
+    system.exit(1)
+report_dir = "report_" + uuid.uuid4().hex
+call(["mkdir", report_dir]) # create a report directory
+clients = []
+for i in range(0, int(num_of_clients)):
+    client_arg = [perf_jar_name, "-p", str(server_port), "-cname", str(i), "-sfile", report_dir, 
+    "-bmsg", str(num_of_broadcast_msg), "-umsg", str(num_of_unicast_msg), "-lmsg", str(num_of_list_msg)]
+    clients.append(Popen(JAR_COMMAND + client_arg))
+    print("Start client " + str(i))
+# python client.py --serverjar simple-chat-server.jar --perfjar simple-chat-client-perf.jar --clients 10 --port 5556 --umsg 10 --bmsg 10 --lmsg 10

@@ -1,6 +1,7 @@
 package com.simplechat.server.core.client;
 
 import com.google.common.collect.Sets;
+import com.simplechat.server.core.configuration.Server;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.SocketAddress;
@@ -20,6 +21,9 @@ public final class ClientRegistry {
 
     public static void registerClient(@NotNull Client client) {
         if (REGISTRY.add(client)) {
+            if (!Server.isSilentModeOn()) {
+                System.out.println("Client");
+            }
             client.setRegistered(true);
         }
     }

@@ -29,29 +29,42 @@ public class ClientSession implements Runnable {
 
     @Override
     public void run() {
-        try (Reader reader = new InputStreamReader(clientSocket.getInputStream());
-                BufferedReader in = new BufferedReader(reader);
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream())) {
+        try {
+            Reader reader = new InputStreamReader(clientSocket.getInputStream());
+            BufferedReader in = new BufferedReader(reader);
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
             final SocketAddress socketAddress = clientSocket.getRemoteSocketAddress();
             System.out.println(MessageFormat.format("Unknown user try to login from {0}. ",
                     socketAddress));
             final String userName = CommandUtils.processLoginCommand(in.readLine());
             CompletableFuture
                     .supplyAsync(() -> logClient(userName, out, socketAddress))
-                    .thenAccept((client) -> processClientSession(in, out, userName, client));
+                    .thenAccept((client) -> {
+                        try {
+                            processClientSession(in, out, userName, client);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
         } catch (Throwable ex) {
             System.err.println(String.format("Connection from %s reset!",
                     clientSocket.getRemoteSocketAddress().toString()));
             ex.printStackTrace();
-        } finally {
-            try {
-                clientSocket.close();
-                ClientRegistry.unregisterClient(clientSocket.getRemoteSocketAddress());
-                System.out.println(String.format("%s is stopped!",
-                        clientSocket.getRemoteSocketAddress().toString()));
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            logout(null);
+        }
+    }
+
+    private void logout(Client client) {
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ClientRegistry.unregisterClient(clientSocket.getRemoteSocketAddress());
+        System.out.println(String.format("%s is stopped!",
+                    clientSocket.getRemoteSocketAddress().toString()));
+        if (client != null) {
+            client.setRegistered(false);
         }
     }
 
@@ -82,7 +95,7 @@ public class ClientSession implements Runnable {
     }
 
     private void processClientSession(@NotNull BufferedReader in, @NotNull PrintWriter out, String userName,
-                                      @NotNull Client client) {
+                                      @NotNull Client client) throws IOException {
         // Client session
         while (client.isRegistered()) {
             try {
@@ -105,10 +118,11 @@ public class ClientSession implements Runnable {
                     out.println(response.toString());
                     out.flush();
                 });
-            } catch (IOException ioe) {
+            } catch (Throwable ioe) {
                 System.err.println(String.format("Connection from %s reset!",
                         clientSocket.getRemoteSocketAddress().toString()));
                 ioe.printStackTrace();
+                logout(client);
             }
         }
     }

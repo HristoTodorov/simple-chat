@@ -3,12 +3,15 @@ package com.simplechat.perf.client;
 import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+
 /**
  * Created by lampt on 6/18/2017.
  */
 public class PerfClientInitializer {
 
     public static void main(String[] args) {
+        Arrays.asList(args).forEach(System.out::println);
         ArgumentParser parser = new ArgumentParser(args).invoke();
         ClientPerf perf = new ClientPerf(parser.getPort(), parser.getClientSuffix(), parser.getNumberOfUnicastMessages(),
                 parser.getNumberOfBroadcastMessages(), parser.getNumberOfListMessages(), parser.getStatsFile());
@@ -56,11 +59,11 @@ public class PerfClientInitializer {
         public ArgumentParser invoke() {
             Options options = getOptions();
             CommandLineParser parser = new DefaultParser();
-            populateOptions(options, parser);
+            parseOptions(options, parser);
             return this;
         }
 
-        private void populateOptions(Options options, CommandLineParser parser) {
+        private void parseOptions(Options options, CommandLineParser parser) {
             try {
                 CommandLine line = parser.parse(options, args);
                 // help option

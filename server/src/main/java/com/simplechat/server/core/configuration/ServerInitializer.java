@@ -6,12 +6,14 @@ import org.jetbrains.annotations.NotNull;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 
 /**
  * Created by lampt on 6/17/2017.
  */
 public class ServerInitializer {
     public static void main(String[] args) {
+        Arrays.asList(args).stream().forEach(System.out::println);
         ArgumentParser argumentParser = new ArgumentParser(args).invoke();
         int port = argumentParser.getPort();
         boolean isSilentModeOn = argumentParser.isSilentModeOn();

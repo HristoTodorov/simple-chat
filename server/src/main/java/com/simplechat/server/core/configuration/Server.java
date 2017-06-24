@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-class Server {
+public class Server {
 
     private static final boolean SERVER_UP = true;
 
@@ -35,4 +35,11 @@ class Server {
         }
     }
 
+    public static int getPORT() {
+        return PORT;
+    }
+
+    public static boolean isSilentModeOn() {
+        return SILENT_MODE_ON;
+    }
 }

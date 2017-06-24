@@ -9,4 +9,5 @@ public class Commands {
     public static final String SEND_ALL = "send_all";
     public static final String LIST = "list";
     public static final String BYE = "bye";
+    public static final String SEND_FILE_TO = "send_file_to";
 }
