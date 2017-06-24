@@ -21,6 +21,7 @@
     <modules>
         <module>shared</module>
         <module>server</module>
+        <module>client</module>
         <module>client-perf</module>
     </modules>
 
