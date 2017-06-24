@@ -12,6 +12,7 @@
         <apache.commons.cli.version>1.4</apache.commons.cli.version>
         <apache.commons.lang3.version>3.5</apache.commons.lang3.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <apache.commons.io.version>2.5</apache.commons.io.version>
     </properties>
     <description>
         This is a simple-chat application for FMI course Distributed software architectures.

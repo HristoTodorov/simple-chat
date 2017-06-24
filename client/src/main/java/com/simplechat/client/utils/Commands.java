@@ -1,5 +1,6 @@
 package com.simplechat.client.utils;
 
+@Deprecated
 public class Commands {
 	public static final String FILE_DATA = "<FILE>";
     public static final String SEND_FILE_TO = "send_file_to";

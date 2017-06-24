@@ -1,7 +1,6 @@
 package com.simplechat.client.gui;
 
 import javax.swing.*;
-import javax.swing.text.html.HTMLEditorKit;
 import java.io.PrintWriter;
 
 

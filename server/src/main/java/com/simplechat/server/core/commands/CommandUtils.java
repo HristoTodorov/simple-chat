@@ -1,12 +1,16 @@
 package com.simplechat.server.core.commands;
 
+import com.simplechat.server.core.client.ClientRegistry;
+import com.simplechat.shared.commands.Command;
 import com.simplechat.shared.messages.Commands;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class CommandUtils {
 
@@ -56,4 +60,13 @@ public final class CommandUtils {
         }
         return null;
     }
+
+    public static boolean isFileRecieveCommand(String... args) {
+        if (Commands.SEND_FILE_TO.equals(args[0])) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

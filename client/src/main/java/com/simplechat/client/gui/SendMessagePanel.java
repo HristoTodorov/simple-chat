@@ -1,14 +1,11 @@
 package com.simplechat.client.gui;
 
-import com.simplechat.shared.commands.Command;
+import com.simplechat.shared.messages.Commands;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.PrintWriter;
-import java.util.Objects;
 
 /**
  * Created by lampt on 6/24/2017.
@@ -64,7 +61,7 @@ public class SendMessagePanel extends JPanel {
                 String recipientName = userNameField.getText();
 
                 if (StringUtils.isNotBlank(recipientName)) {
-                    printer.println(String.format("%s %s %s", Command.SEND_TO.toString().toLowerCase(),
+                    printer.println(String.format("%s %s %s", Commands.SEND_TO,
                             recipientName, message));
                     printer.flush();
                 } else {
@@ -73,7 +70,7 @@ public class SendMessagePanel extends JPanel {
                 }
             } else {
                 // broadcast message
-                printer.println(Command.SEND_ALL.toString().toLowerCase() + " " + message );
+                printer.println(Commands.SEND_ALL + " " + message );
                 printer.flush();
             }
         });

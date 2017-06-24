@@ -1,18 +1,23 @@
 package com.simplechat.client.gui;
 
-import com.simplechat.client.utils.Commands;
-import com.simplechat.client.utils.FileUtils;
 import com.simplechat.client.utils.MessageUtils;
+import com.simplechat.shared.CommonUtils;
+import com.simplechat.shared.messages.FileCommand;
+import com.simplechat.shared.messages.SimpleMessageFile;
+import org.apache.commons.io.FileUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
+import java.util.Base64;
 
 public class ClientGUI extends JFrame {
 
@@ -47,23 +52,22 @@ public class ClientGUI extends JFrame {
                 displayMessage(message);
                 if (message != null && !message.trim().equals("")) {
                     PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
-                    if (message.startsWith(Commands.SEND_FILE_TO)) {
-                        String[] parts = MessageUtils.getMessageParts(message, Commands.SEND_FILE_TO);
-                        String filename = parts[2];
-                        File file = new File(filename);
-
-                        String formattedMessage = MessageUtils.getMessage(parts[0], parts[1], file.getName());
+                    if (message.startsWith(com.simplechat.shared.messages.Commands.SEND_FILE_TO)) {
+                        String[] parts = MessageUtils.getMessageParts(message,
+                                com.simplechat.shared.messages.Commands.SEND_FILE_TO);
+                        String absoluteFilePath = parts[2];
+                        File file = new File(absoluteFilePath);
+                        byte[] encodedFile = Base64.getEncoder().encode(Files.readAllBytes(file.toPath()));
+                        String fileName = file.getName();
+                        String formattedMessage = MessageUtils.getMessage(parts[0], parts[1], fileName,
+                                new String(encodedFile));
                         out.println(formattedMessage);
-                        out.flush();
-
-                        String encodedFile = FileUtils.encodeFile(file);
-                        out.println(Commands.FILE_DATA + encodedFile);
                         out.flush();
                     } else {
                         out.println(message);
                         out.flush();
                     }
-                    if (Commands.BYE.equals(message)) {
+                    if (com.simplechat.shared.messages.Commands.BYE.equals(message)) {
                         toClose = true;
                     }
                 }
@@ -74,24 +78,19 @@ public class ClientGUI extends JFrame {
         });
 
         sendFileBtn = new JButton("Load a File");
-        sendFileBtn.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final JFileChooser fileChooser = new JFileChooser();
-                int returnVal = fileChooser.showOpenDialog(sendFileBtn);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = fileChooser.getSelectedFile();
-                    appendFileName(file);
-                    System.out.println("Selected file: " + file.getName());
-                } else if (returnVal == JFileChooser.CANCEL_OPTION) {
-                    System.out.println("Cancelled");
-                } else if (returnVal == JFileChooser.ERROR_OPTION) {
-                    System.out.println("Error!");
-                } else {
-                    System.out.println("unknown...");
-                }
-
+        sendFileBtn.addActionListener((event) -> {
+            final JFileChooser fileChooser = new JFileChooser();
+            int returnVal = fileChooser.showOpenDialog(sendFileBtn);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                appendFileName(file);
+                System.out.println("Selected file: " + file.getName());
+            } else if (returnVal == JFileChooser.CANCEL_OPTION) {
+                System.out.println("Cancelled");
+            } else if (returnVal == JFileChooser.ERROR_OPTION) {
+                System.out.println("Error!");
+            } else {
+                System.out.println("unknown...");
             }
         });
 
@@ -130,31 +129,23 @@ public class ClientGUI extends JFrame {
                 String message = inFromServer.readLine();
                 do {
                     if (message != null) {
-                        if (message.startsWith(Commands.FILE_FROM)) {
-                            String[] parts = MessageUtils.getMessageParts(message, Commands.FILE_FROM);
-                            filename = parts[2];
-                        }
-                        if (message.startsWith(Commands.FILE_DATA)) {
-                            filename = FileUtils.getDownloadedFileAbsoluteName(filename);
-                            String encodedFile = message.substring(Commands.FILE_DATA.length());
-                            File decodeFile = FileUtils.decodeFile(encodedFile, filename);
-
-                            PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
-                            String fileTransferStatusMessage = Commands.FILE_ACCEPTED_SUCESSFULLY;
-                            if (decodeFile == null) {
-                                fileTransferStatusMessage = Commands.CLIENT_TRANSFER_ERROR;
-                            }
-                            out.println(fileTransferStatusMessage);
-                            out.flush();
-                            message = Commands.FILE_DATA + filename + Commands.FILE_DATA;
-                            filename = null;
+                        if (message.startsWith(com.simplechat.shared.messages.Commands.RECIEVED_FILE_FROM)) {
+                            SimpleMessageFile messageFile = FileCommand.getFileFromCommand(message);
+                            File destinationFile = Paths.get(
+                                    CommonUtils.USER_HOME_DIR, messageFile.getFileName()).toFile();
+                            FileUtils.touch(destinationFile);
+                            Files.write(destinationFile.toPath(),
+                                    Base64.getDecoder().decode(messageFile.getFileContent()),
+                                    StandardOpenOption.TRUNCATE_EXISTING);
+                            displayMessage(MessageFormat.format("FILE [{0}] received from [{1}].",
+                                    messageFile.getFileName(), messageFile.getFrom()));
                         }
                         displayMessage(message);
                     }
                     message = inFromServer.readLine();
                 } while (message != null);
             } catch (IOException exception) {
-                displayMessage(exception.toString() + System.getProperty("line.separator"));
+                displayMessage(exception.toString() + CommonUtils.LINE_SEPARATOR);
                 exception.printStackTrace();
             }
         }

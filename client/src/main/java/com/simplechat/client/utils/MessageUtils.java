@@ -1,5 +1,7 @@
 package com.simplechat.client.utils;
 
+import com.simplechat.shared.messages.FileCommand;
+
 public class MessageUtils {
 	
 	/**
@@ -18,16 +20,15 @@ public class MessageUtils {
 		
 		return parts;
 	}
-	
-	public static String getMessage(String command, String username, String value) {
-		return String.format("%s %s %s", command, username, value);
+
+	public static String getMessage(String command, String username, String fileName, String encodedFile) {
+		return String.format("%s %s %s %s%s%s",
+				command,
+				username,
+				fileName,
+				FileCommand.FILE_CONTENT_HEADER,
+				encodedFile,
+				FileCommand.FILE_CONTENT_FOOTER);
 	}
-	
-//	public static void main(String[] args) {
-//		String msg = "500 send_to user5 it is a great job!";
-//		String[] messageParts = getMessageParts(msg, "500 send_to");
-//		System.out.println(Arrays.toString(messageParts));
-//		
-//		System.out.println(getMessage("send_to", "user2", "C:\\file.txt"));
-//	}
+
 }

@@ -19,7 +19,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <google.guice.version>4.1.0</google.guice.version>
-        <apache.commons.io.version>2.5</apache.commons.io.version>
     </properties>
     <developers>
         <developer>

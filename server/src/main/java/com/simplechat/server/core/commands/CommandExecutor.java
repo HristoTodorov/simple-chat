@@ -13,9 +13,11 @@ import com.simplechat.shared.messages.Commands;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -56,13 +58,15 @@ public class CommandExecutor implements Callable<IServerResponse> {
             return executeListCommand();
         }
 
-        // TODO file command
-
         if (commandArgs.length == 1 && Commands.BYE.equals(commandArgs[0])) {
             ClientRegistry.unregisterClient(senderName);
             NotifierRegistry.removeNotifier(senderName);
             notifyClients();
             throw new ClientLogoutException();
+        }
+
+        if (CommandUtils.isFileRecieveCommand(commandArgs)) {
+            return routeFile(senderName, command);
         }
         return new NullServerResponse();
     }
@@ -86,7 +90,8 @@ public class CommandExecutor implements Callable<IServerResponse> {
             return new NullServerResponse();
         }
         return CompletableFuture.supplyAsync(() -> {
-            ClientRegistry.getConnectedClients().forEach((Client client) -> doSendMessage(message, client));
+            ClientRegistry.getConnectedClients().forEach((Client client) -> doSendMessage(
+                    MessageUtils.prepareRecievedMessage(senderName, message), client));
             return new ServerResponse(IServerResponse.ResponseCode.OK,
                     "message sent successfully.\n");
         }).get();
@@ -99,7 +104,7 @@ public class CommandExecutor implements Callable<IServerResponse> {
         }
         Optional<Client> optionalClient = ClientRegistry.getClient(userName);
         if (optionalClient.isPresent()) {
-            doSendMessage(message, optionalClient.get());
+            doSendMessage(MessageUtils.prepareRecievedMessage(senderName, message), optionalClient.get());
             return new ServerResponse(IServerResponse.ResponseCode.OK,
                     String.format("Message to %s  sent successfully.", userName));
         } else {
@@ -110,6 +115,21 @@ public class CommandExecutor implements Callable<IServerResponse> {
 
     private void doSendMessage(String message, @NotNull Client recipient) {
         AbstractMessageNotifier listener = NotifierRegistry.getNotifier(recipient.getUserName());
-        listener.onMessage(MessageUtils.prepareRecievedMessage(senderName, message)); // it is ugly, but who cares
+        listener.onMessage(message); // it is ugly, but who cares
+    }
+
+    private IServerResponse routeFile(String senderName, String message)
+            throws ExecutionException, InterruptedException {
+        return CompletableFuture.supplyAsync(() -> {
+            String[] messageArgs = message.split(" ");
+            messageArgs[0] = Commands.RECIEVED_FILE_FROM;
+            String destinationPoint = messageArgs[1];
+            messageArgs[1] = senderName;
+            String newMessage = Arrays.asList(messageArgs).stream().collect(Collectors.joining(" "));
+            Optional<Client> reciever = ClientRegistry.getClient(destinationPoint);
+            reciever.ifPresent(client -> doSendMessage(newMessage, client)); // route file to the destination
+            return new ServerResponse(IServerResponse.ResponseCode.OK, "file accepted sucessfully");
+        }).get();
+
     }
 }
