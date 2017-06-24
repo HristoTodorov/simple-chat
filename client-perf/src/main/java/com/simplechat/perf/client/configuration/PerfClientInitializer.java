@@ -1,5 +1,7 @@
-package com.simplechat.perf.client;
+package com.simplechat.perf.client.configuration;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,8 +15,10 @@ public class PerfClientInitializer {
     public static void main(String[] args) {
         Arrays.asList(args).forEach(System.out::println);
         ArgumentParser parser = new ArgumentParser(args).invoke();
-        ClientPerf perf = new ClientPerf(parser.getPort(), parser.getClientSuffix(), parser.getNumberOfUnicastMessages(),
-                parser.getNumberOfBroadcastMessages(), parser.getNumberOfListMessages(), parser.getStatsFile());
+        String clientName = "acc" + Long.toString(parser.getClientSuffix());
+        Injector injector = Guice.createInjector(new ClientPerfModule(parser.getNumberOfUnicastMessages(), parser.getNumberOfListMessages(),
+                parser.getNumberOfBroadcastMessages(), parser.getPort(), clientName, parser.getStatsFile()));
+        ClientPerf perf = injector.getInstance(ClientPerf.class);
         perf.run();
     }
 
