@@ -18,6 +18,8 @@
     </description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <google.guice.version>4.1.0</google.guice.version>
+        <apache.commons.io.version>2.5</apache.commons.io.version>
     </properties>
     <developers>
         <developer>
@@ -85,7 +87,12 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>4.1.0</version>
+            <version>${google.guice.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${apache.commons.io.version}</version>
         </dependency>
     </dependencies>
 
