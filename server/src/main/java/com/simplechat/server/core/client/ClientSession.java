@@ -100,7 +100,7 @@ public class ClientSession implements Runnable {
         while (client.isRegistered()) {
             try {
                 final String message = in.readLine();
-                CompletableFuture<IServerResponse> serverResponse = CompletableFuture.supplyAsync(() -> {
+                CompletableFuture.supplyAsync(() -> {
                     try {
                         return new CommandExecutor(userName, message).call();
                     } catch (Exception e) {
@@ -113,8 +113,7 @@ public class ClientSession implements Runnable {
                             return new NullServerResponse();
                         }
                     }
-                });
-                serverResponse.thenAccept(response -> {
+                }).thenAccept(response -> {
                     out.println(response.toString());
                     out.flush();
                 });

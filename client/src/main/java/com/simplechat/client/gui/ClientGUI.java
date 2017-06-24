@@ -11,27 +11,36 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
+import java.text.MessageFormat;
+import java.time.LocalDateTime;
 
-public class GUIClient extends JFrame {
+public class ClientGUI extends JFrame {
 
-    private static GUIClient application;
     private JTextField enterField;
     private JButton sendFileBtn;
     private JButton sendMessageBtn;
     private JPanel panel;
-    private JTextArea displayArea;
+    private JEditorPane editorPane;
     private Socket clientSocket;
 
     private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private boolean toClose = false;
 
-    public GUIClient() {
+    public ClientGUI() {
         super("Simple Chat - Client");
 
         enterField = new JTextField("");
         sendMessageBtn = new JButton("Send message");
         sendMessageBtn.addActionListener((event) -> {
+            try {
+                PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
+                new SendMessageGUI(out);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        enterField.addActionListener((event) -> {
             try {
                 String message = enterField.getText();
                 enterField.setText("");
@@ -51,12 +60,9 @@ public class GUIClient extends JFrame {
                         out.println(Commands.FILE_DATA + encodedFile);
                         out.flush();
                     } else {
-
+                        out.println(message);
+                        out.flush();
                     }
-
-                    displayArea
-                            .setCaretPosition(displayArea.getText().length());
-
                     if (Commands.BYE.equals(message)) {
                         toClose = true;
                     }
@@ -97,10 +103,10 @@ public class GUIClient extends JFrame {
         panel.add(sendMessageBtn);
         add(panel, BorderLayout.NORTH);
 
-        displayArea = new JTextArea();
-        add(new JScrollPane(displayArea), BorderLayout.CENTER);
+        editorPane = new JEditorPane();
+        add(new JScrollPane(editorPane), BorderLayout.CENTER);
 
-        setSize(400, 300);
+        setSize(700, 500);
         setVisible(true);
 
         try {
@@ -119,7 +125,6 @@ public class GUIClient extends JFrame {
                     clientSocket.close();
                     break;
                 }
-
                 BufferedReader inFromServer = new BufferedReader(new InputStreamReader(
                         clientSocket.getInputStream()));
                 String message = inFromServer.readLine();
@@ -141,7 +146,6 @@ public class GUIClient extends JFrame {
                             }
                             out.println(fileTransferStatusMessage);
                             out.flush();
-
                             message = Commands.FILE_DATA + filename + Commands.FILE_DATA;
                             filename = null;
                         }
@@ -154,14 +158,17 @@ public class GUIClient extends JFrame {
                 exception.printStackTrace();
             }
         }
-        application.dispatchEvent(new WindowEvent(application, WindowEvent.WINDOW_CLOSING));
+        this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
     }
 
     private void displayMessage(final String messageToDisplay) {
         System.out.println(messageToDisplay);
         SwingUtilities.invokeLater(() -> {
-            displayArea.append(messageToDisplay);
-            displayArea.append(LINE_SEPARATOR);
+            // TODO add text formatting
+            StringBuilder sb = new StringBuilder(editorPane.getText());
+            sb.append(MessageFormat.format("[{0}] : {1}", LocalDateTime.now(), messageToDisplay))
+                    .append(LINE_SEPARATOR);
+            editorPane.setText(sb.toString());
         });
     }
 
@@ -170,9 +177,4 @@ public class GUIClient extends JFrame {
         enterField.setText(text.concat(file.getAbsolutePath()));
     }
 
-    public static void main(String args[]) {
-        application = new GUIClient();
-        application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        application.waitForMessage();
-    }
 }
