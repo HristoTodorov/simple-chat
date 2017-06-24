@@ -13,7 +13,6 @@ import java.util.Arrays;
 public class PerfClientInitializer {
 
     public static void main(String[] args) {
-        Arrays.asList(args).forEach(System.out::println);
         ArgumentParser parser = new ArgumentParser(args).invoke();
         String clientName = "acc" + Long.toString(parser.getClientSuffix());
         Injector injector = Guice.createInjector(new ClientPerfModule(parser.getNumberOfUnicastMessages(), parser.getNumberOfListMessages(),

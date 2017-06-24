@@ -16,11 +16,13 @@ public class GUIClient extends JFrame {
 
     private static GUIClient application;
     private JTextField enterField;
-    private JButton button;
-    private JButton sendButton;
+    private JButton sendFileBtn;
+    private JButton sendMessageBtn;
     private JPanel panel;
     private JTextArea displayArea;
     private Socket clientSocket;
+
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private boolean toClose = false;
 
@@ -28,53 +30,50 @@ public class GUIClient extends JFrame {
         super("Simple Chat - Client");
 
         enterField = new JTextField("");
-        enterField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                try {
-                    String message = event.getActionCommand();
-                    enterField.setText("");
+        sendMessageBtn = new JButton("Send message");
+        sendMessageBtn.addActionListener((event) -> {
+            try {
+                String message = enterField.getText();
+                enterField.setText("");
+                displayMessage(message);
+                if (message != null && !message.trim().equals("")) {
+                    PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
+                    if (message.startsWith(Commands.SEND_FILE_TO)) {
+                        String[] parts = MessageUtils.getMessageParts(message, Commands.SEND_FILE_TO);
+                        String filename = parts[2];
+                        File file = new File(filename);
 
-                    if (message != null && !message.trim().equals("")) {
-                        PrintWriter out = new PrintWriter(clientSocket.getOutputStream());
+                        String formattedMessage = MessageUtils.getMessage(parts[0], parts[1], file.getName());
+                        out.println(formattedMessage);
+                        out.flush();
 
-                        if (message.startsWith(Commands.SEND_FILE_TO)) {
-                            String[] parts = MessageUtils.getMessageParts(message, Commands.SEND_FILE_TO);
-                            String filename = parts[2];
-                            File file = new File(filename);
+                        String encodedFile = FileUtils.encodeFile(file);
+                        out.println(Commands.FILE_DATA + encodedFile);
+                        out.flush();
+                    } else {
 
-                            String formattedMessage = MessageUtils.getMessage(parts[0], parts[1], file.getName());
-                            out.println(formattedMessage);
-                            out.flush();
-
-                            String encodedFile = FileUtils.encodeFile(file);
-                            out.println(Commands.FILE_DATA + encodedFile);
-                            out.flush();
-                        } else {
-
-                        }
-
-                        displayArea
-                                .setCaretPosition(displayArea.getText().length());
-
-                        if (Commands.BYE.equals(message)) {
-                            toClose = true;
-                        }
                     }
-                } catch (IOException ioException) {
-                    displayMessage(ioException.toString() + System.getProperty("line.separator"));
-                    ioException.printStackTrace();
+
+                    displayArea
+                            .setCaretPosition(displayArea.getText().length());
+
+                    if (Commands.BYE.equals(message)) {
+                        toClose = true;
+                    }
                 }
+            } catch (IOException ioException) {
+                displayMessage(ioException.toString() + System.getProperty("line.separator"));
+                ioException.printStackTrace();
             }
         });
 
-        button = new JButton("Load a File");
-        sendButton = new JButton("Send message");
-        button.addActionListener(new ActionListener() {
+        sendFileBtn = new JButton("Load a File");
+        sendFileBtn.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 final JFileChooser fileChooser = new JFileChooser();
-                int returnVal = fileChooser.showOpenDialog(button);
+                int returnVal = fileChooser.showOpenDialog(sendFileBtn);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
                     appendFileName(file);
@@ -94,8 +93,8 @@ public class GUIClient extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
         panel.add(enterField);
         panel.add(Box.createHorizontalGlue());
-        panel.add(button);
-        panel.add(sendButton);
+        panel.add(sendFileBtn);
+        panel.add(sendMessageBtn);
         add(panel, BorderLayout.NORTH);
 
         displayArea = new JTextArea();
@@ -160,11 +159,9 @@ public class GUIClient extends JFrame {
 
     private void displayMessage(final String messageToDisplay) {
         System.out.println(messageToDisplay);
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                displayArea.append(messageToDisplay);
-                displayArea.append(System.getProperty("line.separator"));
-            }
+        SwingUtilities.invokeLater(() -> {
+            displayArea.append(messageToDisplay);
+            displayArea.append(LINE_SEPARATOR);
         });
     }
 
