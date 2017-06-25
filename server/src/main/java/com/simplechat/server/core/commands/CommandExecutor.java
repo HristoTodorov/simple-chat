@@ -89,12 +89,11 @@ public class CommandExecutor implements Callable<IServerResponse> {
         if (StringUtils.isBlank(message)) {
             return new NullServerResponse();
         }
-        return CompletableFuture.supplyAsync(() -> {
-            ClientRegistry.getConnectedClients().forEach((Client client) -> doSendMessage(
-                    MessageUtils.prepareRecievedMessage(senderName, message), client));
-            return new ServerResponse(IServerResponse.ResponseCode.OK,
-                    "message sent successfully.");
-        }).get();
+
+        ClientRegistry.getConnectedClients().forEach((Client client) -> doSendMessage(
+                MessageUtils.prepareRecievedMessage(senderName, message), client));
+        return new ServerResponse(IServerResponse.ResponseCode.OK,
+                "message sent successfully.");
     }
 
     private IServerResponse executeSendToCommand(final String userName, final String message) {
