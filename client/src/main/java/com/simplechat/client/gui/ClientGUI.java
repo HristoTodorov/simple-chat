@@ -5,6 +5,7 @@ import com.simplechat.shared.CommonUtils;
 import com.simplechat.shared.messages.FileCommand;
 import com.simplechat.shared.messages.SimpleMessageFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +13,6 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
@@ -134,11 +134,15 @@ public class ClientGUI extends JFrame {
                             File destinationFile = Paths.get(
                                     CommonUtils.USER_HOME_DIR, messageFile.getFileName()).toFile();
                             FileUtils.touch(destinationFile);
-                            Files.write(destinationFile.toPath(),
-                                    Base64.getDecoder().decode(messageFile.getFileContent()),
-                                    StandardOpenOption.TRUNCATE_EXISTING);
+                            try {
+                                Files.write(destinationFile.toPath(),
+                                        Base64.getDecoder().decode(messageFile.getFileContent()),
+                                        StandardOpenOption.TRUNCATE_EXISTING);
+                            } catch (Throwable e) {
+                                e.printStackTrace();
+                            }
                             displayMessage(MessageFormat.format("FILE [{0}] received from [{1}].",
-                                    messageFile.getFileName(), messageFile.getFrom()));
+                                    destinationFile.getAbsolutePath(), messageFile.getFrom()));
                         }
                         displayMessage(message);
                     }
@@ -156,10 +160,12 @@ public class ClientGUI extends JFrame {
         System.out.println(messageToDisplay);
         SwingUtilities.invokeLater(() -> {
             // TODO add text formatting
-            StringBuilder sb = new StringBuilder(editorPane.getText());
-            sb.append(MessageFormat.format("[{0}] : {1}", LocalDateTime.now(), messageToDisplay))
-                    .append(LINE_SEPARATOR);
-            editorPane.setText(sb.toString());
+            if (StringUtils.isNotBlank(messageToDisplay)) {
+                StringBuilder sb = new StringBuilder(editorPane.getText());
+                sb.append(MessageFormat.format("[{0}] : {1}", LocalDateTime.now(), messageToDisplay))
+                        .append(LINE_SEPARATOR);
+                editorPane.setText(sb.toString());
+            }
         });
     }
 

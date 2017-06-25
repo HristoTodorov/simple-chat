@@ -49,7 +49,6 @@ public class ClientSession implements Runnable {
         } catch (Throwable ex) {
             System.err.println(String.format("Connection from %s reset!",
                     clientSocket.getRemoteSocketAddress().toString()));
-            ex.printStackTrace();
             logout(null);
         }
     }
@@ -109,7 +108,6 @@ public class ClientSession implements Runnable {
                             return new ServerResponse(ServerResponse.ResponseCode.OK,
                                     "Logged out");
                         } else {
-                            e.printStackTrace();
                             return new NullServerResponse();
                         }
                     }
@@ -120,7 +118,6 @@ public class ClientSession implements Runnable {
             } catch (Throwable ioe) {
                 System.err.println(String.format("Connection from %s reset!",
                         clientSocket.getRemoteSocketAddress().toString()));
-                ioe.printStackTrace();
                 logout(client);
             }
         }

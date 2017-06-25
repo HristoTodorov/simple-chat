@@ -93,7 +93,7 @@ public class CommandExecutor implements Callable<IServerResponse> {
             ClientRegistry.getConnectedClients().forEach((Client client) -> doSendMessage(
                     MessageUtils.prepareRecievedMessage(senderName, message), client));
             return new ServerResponse(IServerResponse.ResponseCode.OK,
-                    "message sent successfully.\n");
+                    "message sent successfully.");
         }).get();
     }
 

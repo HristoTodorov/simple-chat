@@ -15,7 +15,7 @@ public class ClientMessageNotifier implements AbstractMessageNotifier {
 
     @Override
     public void onMessage(String message) {
-        writer.print(message);
+        writer.println(message);
         writer.flush();
     }
 }

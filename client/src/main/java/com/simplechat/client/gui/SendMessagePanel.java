@@ -70,7 +70,7 @@ public class SendMessagePanel extends JPanel {
                 }
             } else {
                 // broadcast message
-                printer.println(Commands.SEND_ALL + " " + message );
+                printer.println(Commands.SEND_ALL + " " + message);
                 printer.flush();
             }
         });

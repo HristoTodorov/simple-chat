@@ -15,8 +15,7 @@ public final class MessageUtils {
                 " msg_from " +
                 userName +
                 " " +
-                message +
-                "\n";
+                message;
     }
 
     public static String prepareGoneMessage(String userName) {
