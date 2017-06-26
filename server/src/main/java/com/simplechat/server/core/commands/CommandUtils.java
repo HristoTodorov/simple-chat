@@ -1,6 +1,9 @@
 package com.simplechat.server.core.commands;
 
+import com.simplechat.server.core.client.Client;
 import com.simplechat.server.core.client.ClientRegistry;
+import com.simplechat.server.core.message.AbstractMessageNotifier;
+import com.simplechat.server.core.message.NotifierRegistry;
 import com.simplechat.shared.commands.Command;
 import com.simplechat.shared.messages.Commands;
 import org.apache.commons.lang3.StringUtils;
@@ -67,6 +70,11 @@ public final class CommandUtils {
         } else {
             return false;
         }
+    }
+
+    public static void doSendMessage(String message, @NotNull Client recipient) {
+        AbstractMessageNotifier listener = NotifierRegistry.getNotifier(recipient.getUserName());
+        listener.onMessage(message); // it is ugly, but who cares
     }
 
 }

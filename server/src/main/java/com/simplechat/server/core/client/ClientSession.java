@@ -3,10 +3,12 @@ package com.simplechat.server.core.client;
 import com.simplechat.server.core.commands.CommandExecutor;
 import com.simplechat.server.core.commands.CommandUtils;
 import com.simplechat.server.core.message.ClientMessageNotifier;
+import com.simplechat.server.core.message.MessageUtils;
 import com.simplechat.server.core.message.NotifierRegistry;
 import com.simplechat.server.core.response.IServerResponse;
 import com.simplechat.server.core.response.NullServerResponse;
 import com.simplechat.server.core.response.ServerResponse;
+import com.simplechat.shared.messages.Commands;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,6 +67,10 @@ public class ClientSession implements Runnable {
         if (client != null) {
             client.setRegistered(false);
         }
+        // notify other clients for this logout
+        ClientRegistry.getConnectedClients().forEach((connectedClient ->
+                CommandUtils.doSendMessage(MessageUtils.prepareGoneMessage(
+                        client.getUserName()), connectedClient)));
     }
 
     private Client logClient(final String userName, final PrintWriter out, final SocketAddress socketAddress) {
